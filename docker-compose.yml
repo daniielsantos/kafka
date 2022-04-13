@@ -1,0 +1,40 @@
+version: '3.9'
+
+services:
+  zoo1:
+    image: zookeeper
+    restart: always
+    hostname: zoo1
+    container_name: zoo1
+    ports:
+      - 2181:2181
+    environment:
+      ZOO_MY_ID: 1
+      ZOO_SERVERS: server.1=zoo1:2888:3888;2181
+    networks:
+      - internal-net
+
+  kafka1:
+    image: confluentinc/cp-kafka
+    restart: always
+    hostname: kafka1
+    container_name: kafka-1
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zoo1:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://192.168.0.14:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1     
+    ports:
+      - 9092:9092
+    depends_on:
+      zoo1:
+        condition: service_started
+    networks:
+      - external-net
+      - internal-net
+
+networks:
+  external-net:
+    external:
+      name: external-net
+  internal-net:
+    internal: true
